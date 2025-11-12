@@ -1,4 +1,7 @@
+using API.Data;
+using API.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
@@ -21,9 +24,11 @@ public class WeatherForecastController : ControllerBase
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
+    private readonly AppDbContext _appDb;
 
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(ILogger<WeatherForecastController> logger, AppDbContext appDb)
     {
+        _appDb = appDb;
         _logger = logger;
     }
 
@@ -39,5 +44,11 @@ public class WeatherForecastController : ControllerBase
                 Summary = Summaries[Random.Shared.Next(Summaries.Length)],
             })
             .ToArray();
+    }
+
+    [HttpGet("users")]
+    public async Task<IEnumerable<User>> GetUsers()
+    {
+        return await _appDb.Users.ToListAsync();
     }
 }
