@@ -50,10 +50,12 @@ jobs:
           node-version: 22
 
       - name: Install frontend dependencies
-        run: npm install --prefix frontend/client
+        working-directory: Frontend/Client
+        run: npm install
 
       - name: Build Angular app
-        run: npm run build --prefix frontend/client
+        working-directory: Frontend/Client
+        run: npm run build
 
       # 🐳 Docker Build (optional CI check)
       - name: Build Docker images
