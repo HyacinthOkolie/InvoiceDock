@@ -35,10 +35,10 @@ jobs:
           dotnet-version: "9.0.x"
 
       - name: Restore .NET dependencies
-        run: dotnet restore ./backend/Backend.sln
+        run: dotnet restore ./Backend/Backend.sln
 
       - name: Build .NET API
-        run: dotnet build ./backend/Backend.sln --no-restore -c Release
+        run: dotnet build ./Backend/Backend.sln --no-restore -c Release
 
       # - name: Run .NET tests (optional)
       #   run: dotnet test ./backend/Backend.sln --no-build --verbosity normal
