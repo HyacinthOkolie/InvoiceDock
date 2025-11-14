@@ -19,7 +19,7 @@ namespace API.Models
         [Required]
         public string PasswordHash { get; set; }
         public string Role { get; set; } = "User";
-        // public ICollection<Client>? Clients { get; set; }
-        // public ICollection<Invoice>? Invoices { get; set; }
+        public ICollection<Client>? Clients { get; set; }
+        public ICollection<Invoice>? Invoices { get; set; }
     }
 }

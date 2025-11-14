@@ -14,13 +14,17 @@ namespace API.Data
 
         public DbSet<User> Users { get; set; }
 
-        // public DbSet<Client> Clients { get; set; }
-        // public DbSet<Invoice> Invoices { get; set; }
-        // public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<Client> Clients { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            ConfigureDeleteBehaviorToRestrict(modelBuilder);
+
+
             modelBuilder
                 .Entity<User>()
                 .HasData(
@@ -33,6 +37,18 @@ namespace API.Data
                         Role = "Admin",
                     }
                 );
+        }
+
+        private void ConfigureDeleteBehaviorToRestrict(ModelBuilder modelBuilder)
+        {
+            // Get all entity types and configure delete behavior
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var foreignKey in entityType.GetForeignKeys())
+                {
+                    foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+                }
+            }
         }
     }
 }

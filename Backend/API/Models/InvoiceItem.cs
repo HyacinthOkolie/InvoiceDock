@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace API.Models
 {
@@ -14,8 +16,20 @@ namespace API.Models
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice => Quantity * UnitPrice;
 
-        [ForeignKey("Invoice")]
+        // [ForeignKey("Invoice")]
         public int InvoiceId { get; set; }
         public Invoice? Invoice { get; set; }
+    }
+
+    public class InvoiceItemConfiguration : IEntityTypeConfiguration<InvoiceItem>
+    {
+        public void Configure(EntityTypeBuilder<InvoiceItem> builder)
+        {
+            builder
+                .HasOne(ii => ii.Invoice)
+                .WithMany(i => i.Items)
+                .HasForeignKey(ii => ii.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }
