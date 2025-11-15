@@ -14,9 +14,9 @@ namespace IntegrationTests.Infrastructure
             SqlContainer = new TestSqlServerContainer();
             await SqlContainer.InitializeAsync();
 
-            Factory = new CustomWebApplicationFactory(SqlContainer.ConnectionString);
+            // Factory = new CustomWebApplicationFactory(SqlContainer.ConnectionString);
 
-            Client = Factory.CreateClient();
+            // Client = Factory.CreateClient();
         }
 
         public async Task DisposeAsync()

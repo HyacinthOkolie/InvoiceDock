@@ -10,12 +10,13 @@ namespace IntegrationTests.Infrastructure
     // Required for overriding config + using real DB
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
-        private readonly string _connectionString;
+        private readonly string _connectionString =
+            "Server=localhost,1433;Database=InvoiceDockTest;User Id=sa;Password=Password@123;TrustServerCertificate=True";
 
-        public CustomWebApplicationFactory(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        // public CustomWebApplicationFactory(string connectionString)
+        // {
+        //     _connectionString = connectionString;
+        // }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
