@@ -11,16 +11,18 @@ jobs:
     services:
       docker:
         image: docker:24.0.6-dind
-        options: --privileged
+        options: >-
+          --privileged
+          --host=tcp://0.0.0.0:2375
         ports:
           - 2375:2375
         env:
           DOCKER_TLS_CERTDIR: ""
 
     env:
-      TESTCONTAINERS_RYUK_DISABLED: true
-      TESTCONTAINERS_HOST_OVERRIDE: "localhost"
       DOCKER_HOST: tcp://localhost:2375
+      TESTCONTAINERS_RYUK_DISABLED: true
+      TESTCONTAINERS_HOST_OVERRIDE: "host.docker.internal"
 
     steps:
       - name: Checkout repository

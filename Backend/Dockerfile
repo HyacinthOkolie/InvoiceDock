@@ -9,6 +9,7 @@ WORKDIR /src
 # Copy the solution file and restore dependencies
 COPY Backend.sln ./
 COPY API/*.csproj ./API/
+COPY IntegrationTests/*.csproj ./IntegrationTests/
 RUN dotnet restore Backend.sln
 
 # Copy everything else and publish
