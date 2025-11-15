@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IntegrationTests.Infrastructure
 {
+    // Custom WebApplicationFactory to configure the test server
+    // Required for overriding config + using real DB
     public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         private readonly string _connectionString;
@@ -26,6 +28,7 @@ namespace IntegrationTests.Infrastructure
                 if (descriptor != null)
                     services.Remove(descriptor);
 
+                // Add SQL Server (real DB from GitHub Pipeline)
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer(_connectionString)
                 );

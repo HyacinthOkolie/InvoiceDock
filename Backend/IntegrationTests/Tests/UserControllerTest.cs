@@ -4,10 +4,13 @@ using API.Models;
 using FluentAssertions;
 using IntegrationTests.Infrastructure;
 
-public class UserControllerTest : IntegrationTestBase
+public class UserControllerTest : IntegrationTestBaseNoContainer
 {
+    public UserControllerTest(CustomWebApplicationFactory factory)
+        : base(factory) { }
+
     [Fact]
-    public async Task GetUsers_Should_Return_Seeded_Users()
+    public async Task GetUsers_ReturnSeededUsers()
     {
         var response = await Client.GetAsync("/api/WeatherForecast/users");
 
