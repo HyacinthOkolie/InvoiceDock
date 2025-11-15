@@ -8,41 +8,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:24.0.6-dind
-        options: --privileged
-        ports:
-          - 2375:2375
-        env:
-          DOCKER_TLS_CERTDIR: ""
-
-    env:
-      DOCKER_HOST: tcp://localhost:2375
-      TESTCONTAINERS_RYUK_DISABLED: true
-      TESTCONTAINERS_HOST_OVERRIDE: "host.docker.internal"
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      # ---------------------------
-      # Backend (.NET)
-      # ---------------------------
-
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('Backend/**/*.csproj') }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.0.x"
-
-      - name: Check Docker
-        run: docker info
 
       - name: Restore .NET dependencies
         run: dotnet restore ./Backend/Backend.sln
@@ -50,47 +23,19 @@ jobs:
       - name: Build .NET API
         run: dotnet build ./Backend/Backend.sln --no-restore -c Release
 
-      - name: Run .NET tests (unit + integration)
+      - name: Run .NET tests
         run: dotnet test ./Backend/Backend.sln --no-build --verbosity normal
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: "**/*.trx"
-
-      # ---------------------------
-      # Frontend (Angular)
-      # ---------------------------
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('Frontend/Client/package-lock.json') }}
-
-      - name: Install frontend dependencies
+      - name: Install and build Angular app
         working-directory: Frontend/Client
-        run: npm install
-
-      - name: Build Angular app
-        working-directory: Frontend/Client
-        run: npm run build
-
-      - name: Upload frontend build
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: Frontend/Client/dist
-
-      # ---------------------------
-      # Docker Compose Build
-      # ---------------------------
+        run: |
+          npm ci
+          npm run build
 
       - name: Build Docker images
         run: docker compose build
