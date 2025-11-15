@@ -38,42 +38,57 @@ using API.Data;
 
 namespace IntegrationTests.Infrastructure;
 
-public abstract class IntegrationTestBase : IClassFixture<CustomWebApplicationFactory>
+public abstract class IntegrationTestBase
+    : IClassFixture<CustomWebApplicationFactory>,
+        IAsyncLifetime
 {
     protected readonly CustomWebApplicationFactory Factory;
     protected readonly HttpClient Client;
     protected readonly AppDbContext DbContext;
+    protected readonly IServiceScope Scope;
 
     protected IntegrationTestBase(CustomWebApplicationFactory factory)
     {
         Factory = factory;
         Client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            AllowAutoRedirect = false 
-        }
+                AllowAutoRedirect = false,
+                BaseAddress = new Uri("https://localhost:5000"), // Make sure this matches your API URL
+            }
         );
 
         // Create a scope to get DbContext
-        var scope = factory.Services.CreateScope();
-        DbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        // Ensure clean database for each test
-        CleanDatabase();
+        Scope = factory.Services.CreateScope();
+        DbContext = Scope.ServiceProvider.GetRequiredService<AppDbContext>();
     }
 
-    private void CleanDatabase()
+    public async Task InitializeAsync()
+    {
+        // Reset database before each test
+        await CleanDatabaseAsync();
+    }
+
+    public async Task DisposeAsync()
+    {
+        // Clean up after each test
+        await CleanDatabaseAsync();
+        Scope?.Dispose();
+    }
+
+    private async Task CleanDatabaseAsync()
     {
         // Clean all data but keep schema
-        var entityTypes = DbContext.Model.GetEntityTypes();
-        foreach (var entityType in entityTypes)
+        var tableNames = DbContext
+            .Model.GetEntityTypes()
+            .Select(t => t.GetTableName())
+            .Where(name => name != null)
+            .ToList();
+
+        foreach (var tableName in tableNames)
         {
-            var tableName = entityType.GetTableName();
-            if (tableName != null)
-            {
-                DbContext.Database.ExecuteSqlRaw($"DELETE FROM [{tableName}]");
-            }
+            await DbContext.Database.ExecuteSqlRawAsync($"DELETE FROM [{tableName}]");
         }
-        DbContext.SaveChanges();
+        await DbContext.SaveChangesAsync();
     }
 
     protected async Task<T> DeserializeResponse<T>(HttpResponseMessage response)

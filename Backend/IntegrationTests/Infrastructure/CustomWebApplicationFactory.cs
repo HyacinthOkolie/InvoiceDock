@@ -104,6 +104,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             // Ensure database is created and migrated
             try
             {
+                db.Database.EnsureDeleted();
                 db.Database.EnsureCreated();
                 // If you have migrations, run them:
                 db.Database.Migrate();
