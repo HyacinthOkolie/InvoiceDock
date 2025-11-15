@@ -69,7 +69,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         _dbContainer = new MsSqlBuilder()
             .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
             .WithPassword("Password@123")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1434))
             .WithCleanUp(true)
             .Build();
     }
