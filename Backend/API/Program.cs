@@ -63,3 +63,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// required to enable WebApplicationFactory<Program>
+public partial class Program { }
