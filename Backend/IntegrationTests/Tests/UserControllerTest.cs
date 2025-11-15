@@ -4,7 +4,7 @@ using API.Models;
 using FluentAssertions;
 using IntegrationTests.Infrastructure;
 
-public class UserControllerTest : IntegrationTestBaseNoContainer
+public class UserControllerTest : IntegrationTestBase
 {
     public UserControllerTest(CustomWebApplicationFactory factory)
         : base(factory) { }
@@ -16,7 +16,9 @@ public class UserControllerTest : IntegrationTestBaseNoContainer
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var users = await response.Content.ReadFromJsonAsync<List<User>>();
+        var users = await DeserializeResponse<List<User>>(response);
+
+        // var users = await response.Content.ReadFromJsonAsync<List<User>>();
 
         users.Should().NotBeNull();
         users.Should().NotBeEmpty();

@@ -10,31 +10,31 @@ jobs:
 
     services:
       # SQL Server for integration tests
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          SA_PASSWORD: "Password@123"
-          ACCEPT_EULA: "Y"
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password@123' -Q 'SELECT 1' -C"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
-    env:
-      ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDock;User Id=sa;Password=Password@123;TrustServerCertificate=True"
-
-
-      # Docker-in-Docker for building images and running Testcontainers
-    #   docker:
-    #     image: docker:24.0.6-dind
-    #     options: --privileged
-    #     ports:
-    #       - 2375:2375
+    #   sqlserver:
+    #     image: mcr.microsoft.com/mssql/server:2022-latest
     #     env:
-    #       DOCKER_TLS_CERTDIR: ""
+    #       SA_PASSWORD: "Password@123"
+    #       ACCEPT_EULA: "Y"
+    #     ports:
+    #       - 1433:1433
+    #     options: >-
+    #       --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password@123' -Q 'SELECT 1' -C"
+    #       --health-interval=10s
+    #       --health-timeout=5s
+    #       --health-retries=10
+
+    # env:
+    #   ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDock;User Id=sa;Password=Password@123;TrustServerCertificate=True"
+
+
+    # Docker-in-Docker for building images and running Testcontainers
+      docker:
+        image: docker:24.0.6-dind
+        options: --privileged
+        # ports:
+        #   - 2375:2375
+        # env:
+        #   DOCKER_TLS_CERTDIR: ""
 
     # env:
     #   TESTCONTAINERS_RYUK_DISABLED: true
@@ -44,6 +44,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       # ---------------------------
       # Backend (.NET)
@@ -69,7 +72,7 @@ jobs:
       - name: Build .NET API
         run: dotnet build ./Backend/Backend.sln --no-restore -c Release
 
-      - name: Run .NET tests (unit + integration)
+      - name: Run .NET integration tests with TestContainers
         run: dotnet test ./Backend/Backend.sln --configuration Release --verbosity normal
 
       - name: Upload test results
