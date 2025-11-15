@@ -4,6 +4,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+     <!-- Required for GitHub Actions test runs -->
+    <IsTestProject>true</IsTestProject>
+    <VSTestUseTestHost>true</VSTestUseTestHost>
+
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
