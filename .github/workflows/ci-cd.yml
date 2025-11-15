@@ -12,6 +12,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Setup Docker Buildx (recommended approach)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ---------------------------
+      # Backend (.NET)
+      # ---------------------------
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Backend/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -23,19 +39,45 @@ jobs:
       - name: Build .NET API
         run: dotnet build ./Backend/Backend.sln --no-restore -c Release
 
-      - name: Run .NET tests
+      - name: Run .NET tests (unit + integration)
         run: dotnet test ./Backend/Backend.sln --no-build --verbosity normal
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/*.trx"
+          retention-days: 30
+
+      # ---------------------------
+      # Frontend (Angular)
+      # ---------------------------
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
+          cache-dependency-path: Frontend/Client/package-lock.json
 
-      - name: Install and build Angular app
+      - name: Install frontend dependencies
         working-directory: Frontend/Client
-        run: |
-          npm ci
-          npm run build
+        run: npm ci
+
+      - name: Build Angular app
+        working-directory: Frontend/Client
+        run: npm run build
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: Frontend/Client/dist
+          retention-days: 30
+
+      # ---------------------------
+      # Docker Compose Build
+      # ---------------------------
 
       - name: Build Docker images
         run: docker compose build
