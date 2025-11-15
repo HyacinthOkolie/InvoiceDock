@@ -40,7 +40,7 @@ jobs:
         run: dotnet build ./Backend/Backend.sln --no-restore -c Release
 
       - name: Run .NET tests (unit + integration)
-        run: dotnet test ./Backend/Backend.sln --no-build --verbosity normal
+        run: dotnet test ./Backend/Backend.sln --configuration Release --verbosity normal
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
