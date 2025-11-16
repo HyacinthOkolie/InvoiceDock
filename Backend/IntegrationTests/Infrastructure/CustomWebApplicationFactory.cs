@@ -123,6 +123,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
+
+        // Wait longer for SQL Server to be fully ready
+        await Task.Delay(15000);
+
+        await InitializeDatabaseAsync();
     }
 
     public new async Task DisposeAsync()
