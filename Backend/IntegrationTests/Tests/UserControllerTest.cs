@@ -24,16 +24,16 @@ public class UserControllerTest : IntegrationTestBase
     //     users.Should().NotBeEmpty();
     // }
 
-    // [Fact]
-    // public async Task GetUsers_ReturnsSuccess_WhenCalled()
-    // {
-    //     // Act - Use the correct endpoint
-    //     var response = await Client.GetAsync("/WeatherForecast/users");
+    [Fact]
+    public async Task GetUsers_ReturnsSuccess_WhenCalled()
+    {
+        // Act - Use the correct endpoint
+        var response = await Client.GetAsync("/WeatherForecast/users");
 
-    //     // Assert - Just check it doesn't crash
-    //     response.EnsureSuccessStatusCode(); // Throws if not 200-299
-    //     response.StatusCode.Should().Be(HttpStatusCode.OK);
-    // }
+        // Assert - Just check it doesn't crash
+        response.EnsureSuccessStatusCode(); // Throws if not 200-299
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 
     [Fact]
     public async Task Database_ShouldBeAccessible()
