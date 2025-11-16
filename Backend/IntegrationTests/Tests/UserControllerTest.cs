@@ -16,11 +16,17 @@ public class UserControllerTest : IntegrationTestBase
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var users = await DeserializeResponse<List<User>>(response);
+        var users = await DeserializeResponse<List<UserDto>>(response);
 
         // var users = await response.Content.ReadFromJsonAsync<List<User>>();
 
         users.Should().NotBeNull();
         users.Should().NotBeEmpty();
     }
+}
+
+public class UserDto
+{
+    public string FullName { get; set; }
+    public string Email { get; set; }
 }

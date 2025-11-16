@@ -125,9 +125,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         await _dbContainer.StartAsync();
 
         // Wait longer for SQL Server to be fully ready
-        await Task.Delay(15000);
+        // await Task.Delay(15000);
 
-        await InitializeDatabaseAsync();
+        // await InitializeDatabaseAsync();
     }
 
     public new async Task DisposeAsync()
