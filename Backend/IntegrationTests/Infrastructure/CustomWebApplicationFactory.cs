@@ -69,54 +69,27 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         _dbContainer = new MsSqlBuilder()
             .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
             .WithPassword("Password@123")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1434))
-            .WithCleanUp(true)
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
+            .WithEnvironment("ACCEPT_EULA", "Y") // Accept SQL Server EULA
+            // .WithCleanUp(true)
             .Build();
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureTestServices(services =>
+        builder.ConfigureServices(services =>
         {
-            // Remove the existing DbContext registration
             var descriptor = services.SingleOrDefault(d =>
                 d.ServiceType == typeof(DbContextOptions<AppDbContext>)
             );
 
             if (descriptor != null)
-            {
                 services.Remove(descriptor);
-            }
 
-            // Add DbContext with TestContainer connection string
+            // Add SQL Server (Testcontainer)
             services.AddDbContext<AppDbContext>(options =>
-            {
-                options.UseSqlServer(_dbContainer.GetConnectionString());
-            });
-
-            // Build the service provider
-            // var sp = services.BuildServiceProvider();
-            // using var scope = sp.CreateScope();
-            // var scopedServices = scope.ServiceProvider;
-            // var db = scopedServices.GetRequiredService<AppDbContext>();
-            // var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory>>();
-
-            // // Ensure database is created and migrated
-            // try
-            // {
-            //     db.Database.EnsureDeleted();
-            //     db.Database.EnsureCreated();
-            //     // If you have migrations, run them:
-            //     db.Database.Migrate();
-            // }
-            // catch (Exception ex)
-            // {
-            //     logger.LogError(
-            //         ex,
-            //         "An error occurred creating the database. Error: {Message}",
-            //         ex.Message
-            //     );
-            // }
+                options.UseSqlServer(_dbContainer.GetConnectionString())
+            );
         });
     }
 
@@ -138,7 +111,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
     private async Task InitializeDatabaseAsync()
     {
-        using var scope = Services.CreateScope();
+        using var scope = Services.CreateScope(); // Use the built Services
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<
             ILogger<CustomWebApplicationFactory>
@@ -146,17 +119,24 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
         try
         {
-            logger.LogInformation("Deleting existing database...");
+            logger.LogInformation("Setting up test database...");
+
+            // CLEAN START: Delete existing database
             await db.Database.EnsureDeletedAsync();
 
-            logger.LogInformation("Creating new database...");
-            await db.Database.EnsureCreatedAsync();
+            // CHOOSE ONE APPROACH:
 
-            logger.LogInformation("Database initialized successfully");
+            // Option A: Use Migrations (if you have them)
+            await db.Database.MigrateAsync();
+
+            // Option B: Use EnsureCreated (if no migrations)
+            // await db.Database.EnsureCreatedAsync();
+        
+        logger.LogInformation("Test database ready");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to initialize database");
+            logger.LogError(ex, "Failed to initialize test database");
             throw;
         }
     }

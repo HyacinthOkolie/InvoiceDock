@@ -12,7 +12,7 @@ public class UserControllerTest : IntegrationTestBase
     [Fact]
     public async Task GetUsers_ReturnSeededUsers()
     {
-        var response = await Client.GetAsync("/api/WeatherForecast/users");
+        var response = await Client.GetAsync("/WeatherForecast/users");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -22,6 +22,17 @@ public class UserControllerTest : IntegrationTestBase
 
         users.Should().NotBeNull();
         users.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetUsers_ReturnsSuccess_WhenCalled()
+    {
+        // Act - Use the correct endpoint
+        var response = await Client.GetAsync("/WeatherForecast/users");
+
+        // Assert - Just check it doesn't crash
+        response.EnsureSuccessStatusCode(); // Throws if not 200-299
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
 

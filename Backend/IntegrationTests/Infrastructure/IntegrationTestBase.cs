@@ -28,13 +28,12 @@
 //     }
 // }
 
-using Xunit;
+using System.Net.Http;
+using API.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
-using API.Data;
-
+using Xunit;
 
 namespace IntegrationTests.Infrastructure;
 
@@ -50,10 +49,11 @@ public abstract class IntegrationTestBase
     protected IntegrationTestBase(CustomWebApplicationFactory factory)
     {
         Factory = factory;
-        Client = factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
+        Client = factory.CreateClient(
+            new WebApplicationFactoryClientOptions
+            {
                 AllowAutoRedirect = false,
-                BaseAddress = new Uri("https://localhost:5000"), // Make sure this matches your API URL
+                BaseAddress = new Uri("https://localhost:5001"), // Make sure this matches your API URL
             }
         );
 
@@ -71,7 +71,6 @@ public abstract class IntegrationTestBase
     public async Task DisposeAsync()
     {
         // Clean up after each test
-        await CleanDatabaseAsync();
         Scope?.Dispose();
     }
 
@@ -86,7 +85,7 @@ public abstract class IntegrationTestBase
 
         foreach (var tableName in tableNames)
         {
-            await DbContext.Database.ExecuteSqlRawAsync($"DELETE FROM [{tableName}]");
+            await DbContext.Database.ExecuteSqlAsync($"DELETE FROM [{tableName}]");
         }
         await DbContext.SaveChangesAsync();
     }
