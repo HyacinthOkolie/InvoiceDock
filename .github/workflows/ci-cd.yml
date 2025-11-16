@@ -83,9 +83,11 @@ jobs:
           ASPNETCORE_ENVIRONMENT: Development
         run: |
           # Build integration tests separately
+          echo "Running basic integration tests..."
           dotnet build ./Backend/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore
           dotnet test ./Backend/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build --verbosity normal
-
+        continue-on-error: false
+        
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:

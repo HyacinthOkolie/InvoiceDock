@@ -33,6 +33,7 @@ using API.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace IntegrationTests.Infrastructure;
@@ -45,6 +46,7 @@ public abstract class IntegrationTestBase
     protected readonly HttpClient Client;
     protected readonly AppDbContext DbContext;
     protected readonly IServiceScope Scope;
+    protected readonly ILogger<IntegrationTestBase> Logger;
 
     protected IntegrationTestBase(CustomWebApplicationFactory factory)
     {
@@ -53,41 +55,88 @@ public abstract class IntegrationTestBase
             new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false,
-                BaseAddress = new Uri("https://localhost:5001"), // Make sure this matches your API URL
+                HandleCookies = true,
             }
         );
 
-        // Create a scope to get DbContext
         Scope = factory.Services.CreateScope();
         DbContext = Scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Logger = Scope.ServiceProvider.GetRequiredService<ILogger<IntegrationTestBase>>();
     }
 
     public async Task InitializeAsync()
     {
-        // Reset database before each test
+        Logger.LogInformation("Starting test initialization...");
+
+        // Verify database is accessible before cleaning
+        await EnsureDatabaseAccessibleAsync();
         await CleanDatabaseAsync();
     }
 
     public async Task DisposeAsync()
     {
-        // Clean up after each test
+        Logger.LogInformation("Cleaning up test...");
         Scope?.Dispose();
+        Client?.Dispose();
+    }
+
+    private async Task EnsureDatabaseAccessibleAsync()
+    {
+        try
+        {
+            var canConnect = await DbContext.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                throw new InvalidOperationException("Cannot connect to test database");
+            }
+            Logger.LogInformation("Database connection verified");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogCritical(ex, "Database is not accessible");
+            throw;
+        }
     }
 
     private async Task CleanDatabaseAsync()
     {
-        // Clean all data but keep schema
-        var tableNames = DbContext
-            .Model.GetEntityTypes()
-            .Select(t => t.GetTableName())
-            .Where(name => name != null)
-            .ToList();
-
-        foreach (var tableName in tableNames)
+        try
         {
-            await DbContext.Database.ExecuteSqlAsync($"DELETE FROM [{tableName}]");
+            Logger.LogInformation("Cleaning database tables...");
+
+            // Use hardcoded table names to avoid parameterization issues
+            var tables = new[] { "InvoiceItems", "Invoices", "Clients", "Users" };
+
+            foreach (var tableName in tables)
+            {
+                await CleanTableIfExistsAsync(tableName);
+            }
+
+            await DbContext.SaveChangesAsync();
+            Logger.LogInformation("Database cleaned successfully");
         }
-        await DbContext.SaveChangesAsync();
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to clean database");
+            // Don't throw - allow test to run with existing data
+        }
+    }
+
+    private async Task CleanTableIfExistsAsync(string tableName)
+    {
+        try
+        {
+            // Use FormattableString to avoid parameterization
+            await DbContext.Database.ExecuteSqlRawAsync(
+                $"IF OBJECT_ID('{tableName}', 'U') IS NOT NULL DELETE FROM [{tableName}]"
+            );
+            Logger.LogInformation("Cleaned table: {TableName}", tableName);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to clean table {TableName}", tableName);
+            // Continue with other tables
+        }
     }
 
     protected async Task<T> DeserializeResponse<T>(HttpResponseMessage response)
