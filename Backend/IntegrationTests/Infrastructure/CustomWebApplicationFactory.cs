@@ -121,7 +121,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             logger.LogInformation("Setting up test database...");
 
             // CLEAN START: Delete existing database
-            await db.Database.EnsureDeletedAsync();
+            // await db.Database.EnsureDeletedAsync();
 
             // CHOOSE ONE APPROACH:
 
