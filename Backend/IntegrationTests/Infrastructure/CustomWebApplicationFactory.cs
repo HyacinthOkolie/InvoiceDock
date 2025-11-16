@@ -95,28 +95,28 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             });
 
             // Build the service provider
-            var sp = services.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var scopedServices = scope.ServiceProvider;
-            var db = scopedServices.GetRequiredService<AppDbContext>();
-            var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory>>();
+            // var sp = services.BuildServiceProvider();
+            // using var scope = sp.CreateScope();
+            // var scopedServices = scope.ServiceProvider;
+            // var db = scopedServices.GetRequiredService<AppDbContext>();
+            // var logger = scopedServices.GetRequiredService<ILogger<CustomWebApplicationFactory>>();
 
-            // Ensure database is created and migrated
-            try
-            {
-                db.Database.EnsureDeleted();
-                // db.Database.EnsureCreated();
-                // If you have migrations, run them:
-                // db.Database.Migrate();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(
-                    ex,
-                    "An error occurred creating the database. Error: {Message}",
-                    ex.Message
-                );
-            }
+            // // Ensure database is created and migrated
+            // try
+            // {
+            //     db.Database.EnsureDeleted();
+            //     db.Database.EnsureCreated();
+            //     // If you have migrations, run them:
+            //     db.Database.Migrate();
+            // }
+            // catch (Exception ex)
+            // {
+            //     logger.LogError(
+            //         ex,
+            //         "An error occurred creating the database. Error: {Message}",
+            //         ex.Message
+            //     );
+            // }
         });
     }
 
@@ -129,5 +129,30 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
     {
         await _dbContainer.StopAsync();
         await _dbContainer.DisposeAsync();
+    }
+
+    private async Task InitializeDatabaseAsync()
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<
+            ILogger<CustomWebApplicationFactory>
+        >();
+
+        try
+        {
+            logger.LogInformation("Deleting existing database...");
+            await db.Database.EnsureDeletedAsync();
+
+            logger.LogInformation("Creating new database...");
+            await db.Database.EnsureCreatedAsync();
+
+            logger.LogInformation("Database initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to initialize database");
+            throw;
+        }
     }
 }
