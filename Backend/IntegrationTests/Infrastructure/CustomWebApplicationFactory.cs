@@ -47,16 +47,15 @@
 //     }
 // }
 
+using API.Data;
+using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using DotNet.Testcontainers.Builders;
-using API.Data;
 using Testcontainers.MsSql;
-
 
 namespace IntegrationTests.Infrastructure;
 
@@ -100,7 +99,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         // Wait longer for SQL Server to be fully ready
         // await Task.Delay(15000);
 
-        // await InitializeDatabaseAsync();
+        await InitializeDatabaseAsync();
     }
 
     public new async Task DisposeAsync()
@@ -131,8 +130,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
             // Option B: Use EnsureCreated (if no migrations)
             // await db.Database.EnsureCreatedAsync();
-        
-        logger.LogInformation("Test database ready");
+
+            logger.LogInformation("Test database ready");
         }
         catch (Exception ex)
         {
