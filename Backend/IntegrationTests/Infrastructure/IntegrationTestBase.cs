@@ -55,7 +55,8 @@ public abstract class IntegrationTestBase
             new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false,
-                HandleCookies = true,
+                // HandleCookies = true,
+                BaseAddress = new Uri("http://localhost:5000"),
             }
         );
 
