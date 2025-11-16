@@ -105,9 +105,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             try
             {
                 db.Database.EnsureDeleted();
-                db.Database.EnsureCreated();
+                // db.Database.EnsureCreated();
                 // If you have migrations, run them:
-                db.Database.Migrate();
+                // db.Database.Migrate();
             }
             catch (Exception ex)
             {
