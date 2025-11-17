@@ -92,9 +92,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 {
     private readonly TestSqlServerContainer _db;
 
-    public CustomWebApplicationFactory(TestSqlServerContainer container)
+    public CustomWebApplicationFactory(TestSqlServerContainer db)
     {
-        _db = container;
+        _db = db;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -107,9 +107,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
             if (descriptor != null)
                 services.Remove(descriptor);
-
-            // Remove existing SQL config
-            // services.RemoveAll<DbContextOptions<AppDbContext>>();
 
             // Add Testcontainers DB
             services.AddDbContext<AppDbContext>(options =>

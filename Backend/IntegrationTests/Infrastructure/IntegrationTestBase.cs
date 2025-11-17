@@ -7,17 +7,23 @@ using Microsoft.Extensions.Logging;
 
 namespace IntegrationTests.Infrastructure;
 
-public abstract class IntegrationTestBase : IClassFixture<TestSqlServerContainer>, IDisposable
+public abstract class IntegrationTestBase
+    : IClassFixture<TestSqlServerContainer>,
+        IClassFixture<CustomWebApplicationFactory>,
+        IDisposable
 {
-    // protected readonly CustomWebApplicationFactory Factory;
+    protected readonly CustomWebApplicationFactory Factory;
     protected readonly HttpClient Client;
     protected readonly AppDbContext DbContext;
     protected readonly IServiceScope Scope;
     protected readonly ILogger<IntegrationTestBase> Logger;
 
-    protected IntegrationTestBase(TestSqlServerContainer container)
+    protected IntegrationTestBase(
+        TestSqlServerContainer container,
+        CustomWebApplicationFactory factory
+    )
     {
-        var factory = new CustomWebApplicationFactory(container);
+        Factory = factory;
         Client = factory.CreateClient(
             new WebApplicationFactoryClientOptions
             {
