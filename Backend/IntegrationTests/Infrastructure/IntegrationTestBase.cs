@@ -52,6 +52,7 @@ public abstract class IntegrationTestBase
 
     private async Task EnsureDatabaseAccessibleAsync()
     {
+        Console.WriteLine("Verifying database accessibility...");
         try
         {
             var canConnect = await DbContext.Database.CanConnectAsync();

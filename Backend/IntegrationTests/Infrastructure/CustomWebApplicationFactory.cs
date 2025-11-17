@@ -46,10 +46,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
     public async Task InitializeAsync()
     {
         await _dbContainer.StartAsync();
-
-        // Wait longer for SQL Server to be fully ready
-        // await Task.Delay(15000);
-
         await InitializeDatabaseAsync();
     }
 
@@ -71,16 +67,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
         {
             logger.LogInformation("Setting up test database...");
 
-            // CLEAN START: Delete existing database
-            // await db.Database.EnsureDeletedAsync();
-
-            // CHOOSE ONE APPROACH:
-
             // Option A: Use Migrations (if you have them)
             await db.Database.MigrateAsync();
-
-            // Option B: Use EnsureCreated (if no migrations)
-            // await db.Database.EnsureCreatedAsync();
 
             logger.LogInformation("Test database ready");
         }
