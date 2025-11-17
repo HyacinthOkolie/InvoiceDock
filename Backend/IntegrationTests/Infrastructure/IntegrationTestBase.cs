@@ -8,9 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace IntegrationTests.Infrastructure;
 
 public abstract class IntegrationTestBase
-    : IClassFixture<TestSqlServerContainer>,
-        IClassFixture<CustomWebApplicationFactory>,
-        IDisposable
+    : IClassFixture<CustomWebApplicationFactory>,
+        IAsyncLifetime
 {
     protected readonly CustomWebApplicationFactory Factory;
     protected readonly HttpClient Client;
@@ -18,10 +17,7 @@ public abstract class IntegrationTestBase
     protected readonly IServiceScope Scope;
     protected readonly ILogger<IntegrationTestBase> Logger;
 
-    protected IntegrationTestBase(
-        TestSqlServerContainer container,
-        CustomWebApplicationFactory factory
-    )
+    protected IntegrationTestBase(CustomWebApplicationFactory factory)
     {
         Factory = factory;
         Client = factory.CreateClient(
@@ -81,6 +77,4 @@ public abstract class IntegrationTestBase
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
         );
     }
-
-    public void Dispose() { }
 }
