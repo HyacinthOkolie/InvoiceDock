@@ -4,8 +4,8 @@ using IntegrationTests.Infrastructure;
 
 public class UserControllerTest : IntegrationTestBase
 {
-    public UserControllerTest(TestSqlServerContainer container, CustomWebApplicationFactory factory)
-        : base(container, factory) { }
+    public UserControllerTest(CustomWebApplicationFactory factory)
+        : base(factory) { }
 
     [Fact]
     public async Task GetUsers_ReturnsSuccess_WhenCalled()
@@ -32,9 +32,13 @@ public class UserControllerTest : IntegrationTestBase
     public async Task GetUsers_ReturnSeededUsers()
     {
         var response = await Client.GetAsync("/WeatherForecast/users");
+
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var users = await DeserializeResponseAsync<List<UserDto>>(response);
+
+        // var users = await response.Content.ReadFromJsonAsync<List<User>>();
+
         users.Should().NotBeNull();
         users.Should().NotBeEmpty();
     }
