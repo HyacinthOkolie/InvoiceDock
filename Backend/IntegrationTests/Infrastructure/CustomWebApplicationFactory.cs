@@ -92,10 +92,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 {
     private readonly TestSqlServerContainer _db;
 
-    public CustomWebApplicationFactory(TestSqlServerContainer db)
-    {
-        _db = db;
-    }
+    // public CustomWebApplicationFactory(TestSqlServerContainer db)
+    // {
+    //     _db = db;
+    // }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
