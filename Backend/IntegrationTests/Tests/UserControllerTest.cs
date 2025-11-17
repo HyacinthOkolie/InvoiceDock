@@ -4,8 +4,8 @@ using IntegrationTests.Infrastructure;
 
 public class UserControllerTest : IntegrationTestBase
 {
-    public UserControllerTest(CustomWebApplicationFactory factory)
-        : base(factory) { }
+    public UserControllerTest(TestSqlServerContainer container)
+        : base(container) { }
 
     [Fact]
     public async Task GetUsers_ReturnsSuccess_WhenCalled()
