@@ -69,48 +69,7 @@ public abstract class IntegrationTestBase
         }
     }
 
-    private async Task CleanDatabaseAsync()
-    {
-        try
-        {
-            Logger.LogInformation("Cleaning database tables...");
-
-            // Use hardcoded table names to avoid parameterization issues
-            var tables = new[] { "InvoiceItems", "Invoices", "Clients", "Users" };
-
-            foreach (var tableName in tables)
-            {
-                await CleanTableIfExistsAsync(tableName);
-            }
-
-            await DbContext.SaveChangesAsync();
-            Logger.LogInformation("Database cleaned successfully");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to clean database");
-            // Don't throw - allow test to run with existing data
-        }
-    }
-
-    private async Task CleanTableIfExistsAsync(string tableName)
-    {
-        try
-        {
-            // Use FormattableString to avoid parameterization
-            await DbContext.Database.ExecuteSqlRawAsync(
-                $"IF OBJECT_ID('{tableName}', 'U') IS NOT NULL DELETE FROM [{tableName}]"
-            );
-            Logger.LogInformation("Cleaned table: {TableName}", tableName);
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Failed to clean table {TableName}", tableName);
-            // Continue with other tables
-        }
-    }
-
-    protected async Task<T> DeserializeResponse<T>(HttpResponseMessage response)
+    protected async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
     {
         var content = await response.Content.ReadAsStringAsync();
         return System.Text.Json.JsonSerializer.Deserialize<T>(
