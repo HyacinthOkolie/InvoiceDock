@@ -57,6 +57,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
     private async Task InitializeDatabaseAsync()
     {
+        Console.WriteLine("Initializing test database...");
         using var scope = Services.CreateScope(); // Use the built Services
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<
