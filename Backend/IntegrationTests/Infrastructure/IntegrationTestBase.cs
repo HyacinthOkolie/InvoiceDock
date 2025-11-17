@@ -1,40 +1,9 @@
-// using System.Net.Http;
-// using Xunit;
 
-// namespace IntegrationTests.Infrastructure
-// {
-//     public abstract class IntegrationTestBase : IAsyncLifetime
-//     {
-//         protected TestSqlServerContainer SqlContainer;
-//         protected CustomWebApplicationFactory Factory;
-//         protected HttpClient Client;
-
-//         public async Task InitializeAsync()
-//         {
-//             SqlContainer = new TestSqlServerContainer();
-//             await SqlContainer.InitializeAsync();
-
-//             // Factory = new CustomWebApplicationFactory(SqlContainer.ConnectionString);
-
-//             // Client = Factory.CreateClient();
-//         }
-
-//         public async Task DisposeAsync()
-//         {
-//             Client?.Dispose();
-//             Factory?.Dispose();
-//             await SqlContainer.DisposeAsync();
-//         }
-//     }
-// }
-
-using System.Net.Http;
 using API.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
 
 namespace IntegrationTests.Infrastructure;
 
@@ -71,7 +40,7 @@ public abstract class IntegrationTestBase
 
         // Verify database is accessible before cleaning
         await EnsureDatabaseAccessibleAsync();
-        await CleanDatabaseAsync();
+        // await CleanDatabaseAsync();
     }
 
     public async Task DisposeAsync()
