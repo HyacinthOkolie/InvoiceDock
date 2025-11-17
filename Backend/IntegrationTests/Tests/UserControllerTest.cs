@@ -32,13 +32,9 @@ public class UserControllerTest : IntegrationTestBase
     public async Task GetUsers_ReturnSeededUsers()
     {
         var response = await Client.GetAsync("/WeatherForecast/users");
-
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var users = await DeserializeResponseAsync<List<UserDto>>(response);
-
-        // var users = await response.Content.ReadFromJsonAsync<List<User>>();
-
         users.Should().NotBeNull();
         users.Should().NotBeEmpty();
     }

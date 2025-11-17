@@ -1,4 +1,4 @@
-
+using System.Text.Json;
 using API.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ namespace IntegrationTests.Infrastructure;
 
 public abstract class IntegrationTestBase
     : IClassFixture<CustomWebApplicationFactory>,
-        IAsyncLifetime
+        IDisposable
 {
     protected readonly CustomWebApplicationFactory Factory;
     protected readonly HttpClient Client;
@@ -69,12 +69,14 @@ public abstract class IntegrationTestBase
         }
     }
 
-    protected async Task<T> DeserializeResponseAsync<T>(HttpResponseMessage response)
+    protected async Task<T?> DeserializeResponseAsync<T>(HttpResponseMessage response)
     {
         var content = await response.Content.ReadAsStringAsync();
-        return System.Text.Json.JsonSerializer.Deserialize<T>(
+        return JsonSerializer.Deserialize<T>(
             content,
-            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
         );
     }
+
+    public void Dispose() { }
 }
