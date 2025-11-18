@@ -7,6 +7,8 @@ public class TestSqlServerContainer : IAsyncLifetime
 {
     public MsSqlContainer Container { get; }
 
+    public string ConnectionString => Container.GetConnectionString();
+
     public TestSqlServerContainer()
     {
         Container = new MsSqlBuilder()
@@ -16,8 +18,6 @@ public class TestSqlServerContainer : IAsyncLifetime
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
             .Build();
     }
-
-    public string ConnectionString => Container.GetConnectionString();
 
     public Task InitializeAsync() => Container.StartAsync();
 

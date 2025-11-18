@@ -9,19 +9,13 @@ using Testcontainers.MsSql;
 
 namespace IntegrationTests.Infrastructure;
 
-public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
+public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private readonly MsSqlContainer _dbContainer;
+    private string? _connectionString;
 
-    public CustomWebApplicationFactory()
+    public void UseTestDatabase(string connectionString)
     {
-        _dbContainer = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
-            .WithPassword("Password@123")
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
-            .WithEnvironment("ACCEPT_EULA", "Y") // Accept SQL Server EULA
-            .WithCleanUp(true)
-            .Build();
+        _connectionString = connectionString;
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -37,45 +31,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 
             // Add SQL Server (Testcontainer)
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(_dbContainer.GetConnectionString())
+                options.UseSqlServer(_connectionString)
             );
         });
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _dbContainer.StartAsync();
-        await TestDatabaseInitializer.InitializeAsync(Services);
-    }
-
-    public new async Task DisposeAsync()
-    {
-        await _dbContainer.StopAsync();
-        await _dbContainer.DisposeAsync();
-    }
-
-    private async Task InitializeDatabaseAsync()
-    {
-        Console.WriteLine("Initializing test database...");
-        using var scope = Services.CreateScope(); // Use the built Services
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var logger = scope.ServiceProvider.GetRequiredService<
-            ILogger<CustomWebApplicationFactory>
-        >();
-
-        try
-        {
-            logger.LogInformation("Setting up test database...");
-
-            // Option A: Use Migrations (if you have them)
-            await db.Database.MigrateAsync();
-
-            logger.LogInformation("Test database ready");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to initialize test database");
-            throw;
-        }
     }
 }

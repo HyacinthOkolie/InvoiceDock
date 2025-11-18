@@ -2,10 +2,10 @@ using System.Net;
 using FluentAssertions;
 using IntegrationTests.Infrastructure;
 
-public class UserControllerTest : IntegrationTestBase
+public class UserControllerTest : IntegrationTestFixture
 {
-    public UserControllerTest(CustomWebApplicationFactory factory)
-        : base(factory) { }
+    // public UserControllerTest(CustomWebApplicationFactory factory)
+    //     : base(factory) { }
 
     [Fact]
     public async Task GetUsers_ReturnsSuccess_WhenCalled()
