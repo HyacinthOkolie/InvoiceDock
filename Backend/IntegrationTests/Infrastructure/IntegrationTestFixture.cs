@@ -14,6 +14,9 @@ public class IntegrationTestFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; } = default!;
 
+    protected IServiceScope Scope { get; private set; } = default!;
+
+
     // public HttpClient Client => Factory.CreateClient();
 
     public async Task InitializeAsync()
@@ -35,14 +38,15 @@ public class IntegrationTestFixture : IAsyncLifetime
         );
 
         // Build the app host
-        using var scope = Factory.Services.CreateScope();
-        DbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Scope = Factory.Services.CreateScope();
+        DbContext = Scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await TestDatabaseInitializer.InitializeAsync(Factory.Services);
     }
 
     public async Task DisposeAsync()
     {
         await Sql.DisposeAsync();
+        Scope.Dispose();
         Client.Dispose();
         Factory.Dispose();
     }
