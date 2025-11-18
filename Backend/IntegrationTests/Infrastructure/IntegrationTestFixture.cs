@@ -2,33 +2,30 @@ using System.Text.Json;
 using API.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace IntegrationTests.Infrastructure;
 
 public class IntegrationTestFixture : IAsyncLifetime
 {
-    public TestSqlServerContainer Sql { get; private set; } = default!;
-    public CustomWebApplicationFactory Factory { get; private set; } = default!;
+    private TestSqlServerContainer _sql = default!;
+    private IServiceScope _scope = default!;
+    private ILogger<IntegrationTestFixture> _logger = default!;
+    private CustomWebApplicationFactory _factory = default!;
 
     public AppDbContext DbContext { get; private set; } = default!;
-
     public HttpClient Client { get; private set; } = default!;
-
-    protected IServiceScope Scope { get; private set; } = default!;
-
-
-    // public HttpClient Client => Factory.CreateClient();
 
     public async Task InitializeAsync()
     {
         // Start SQL container
-        Sql = new TestSqlServerContainer();
-        await Sql.InitializeAsync();
+        _sql = new TestSqlServerContainer();
+        await _sql.InitializeAsync();
 
         // Create application factory
-        Factory = new CustomWebApplicationFactory();
-        Factory.UseTestDatabase(Sql.ConnectionString);
-        Client = Factory.CreateClient(
+        _factory = new CustomWebApplicationFactory();
+        _factory.UseTestDatabase(_sql.ConnectionString);
+        Client = _factory.CreateClient(
             new WebApplicationFactoryClientOptions
             {
                 AllowAutoRedirect = false,
@@ -38,17 +35,39 @@ public class IntegrationTestFixture : IAsyncLifetime
         );
 
         // Build the app host
-        Scope = Factory.Services.CreateScope();
-        DbContext = Scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await TestDatabaseInitializer.InitializeAsync(Factory.Services);
+        _scope = _factory.Services.CreateScope();
+        DbContext = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await TestDatabaseInitializer.InitializeAsync(_factory.Services);
+        _logger = _scope.ServiceProvider.GetRequiredService<ILogger<IntegrationTestFixture>>();
+
+        await EnsureDatabaseAccessibleAsync();
     }
 
     public async Task DisposeAsync()
     {
-        await Sql.DisposeAsync();
-        Scope.Dispose();
+        await _sql.DisposeAsync();
+        _scope.Dispose();
         Client.Dispose();
-        Factory.Dispose();
+        _factory.Dispose();
+    }
+
+    private async Task EnsureDatabaseAccessibleAsync()
+    {
+        _logger.LogInformation("Verifying database accessibility...");
+        try
+        {
+            var canConnect = await DbContext.Database.CanConnectAsync();
+            if (!canConnect)
+            {
+                throw new InvalidOperationException("Cannot connect to test database");
+            }
+            _logger.LogInformation("Database connection verified");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "Database is not accessible");
+            throw;
+        }
     }
 
     protected async Task<T?> DeserializeResponseAsync<T>(HttpResponseMessage response)
