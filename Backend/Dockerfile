@@ -5,15 +5,16 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 WORKDIR /src
 
-
 # Copy the solution file and restore dependencies
 COPY Backend.sln ./
 COPY API/*.csproj ./API/
 COPY IntegrationTests/*.csproj ./IntegrationTests/
+
 RUN dotnet restore Backend.sln
 
 # Copy everything else and publish
 COPY . .
+
 WORKDIR /src/API
 RUN dotnet publish -c Release -o /app/publish
 

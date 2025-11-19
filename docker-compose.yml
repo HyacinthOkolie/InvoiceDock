@@ -1,7 +1,7 @@
-version: '3.9'
 
 services:
   api:
+    # image: invoicedock-api:latest
     build: ./Backend
     ports:
       - "5000:8080"
@@ -9,8 +9,8 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=db;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True;
     depends_on:
-      - db
-
+       - db
+    
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql_invoicedb
@@ -21,9 +21,31 @@ services:
     ports:
       - "1434:1433"
 
-  frontend:
+   # Health check to ensure DB is ready before API starts
+    # healthcheck:
+    #   test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password@123", "-Q", "SELECT 1"]
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 10
+    #   start_period: 60s
+
+  migrate:
+    profiles: ["ci-cd"]  # Add this line
+    image: invoicedock-api:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True"
+    entrypoint: ["dotnet", "API.dll", "--migrate"]
+    restart: "no"
+
+  client:
+    # image: invoicedock-frontend:latest 
     build: ./Frontend
     ports:
       - "4200:80"
     depends_on:
       - api
+      # - migrate

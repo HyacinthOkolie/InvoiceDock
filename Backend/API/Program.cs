@@ -49,6 +49,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+if (args.Contains("--migrate"))
+{
+    Console.WriteLine("Running EF Core migrations...");
+
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
+    Console.WriteLine("Migrations complete.");
+    return;
+}
+
+// if (app.Environment.IsDevelopment())
+// {
+//     using var scope = app.Services.CreateScope();
+//     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+//     // Only in development
+//     await dbContext.Database.MigrateAsync();
+// }
+
 app.UseCors(c =>
     c.AllowAnyHeader()
         .AllowAnyMethod()

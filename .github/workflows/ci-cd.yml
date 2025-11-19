@@ -10,38 +10,29 @@ jobs:
 
     services:
       # SQL Server for integration tests
-    #   sqlserver:
-    #     image: mcr.microsoft.com/mssql/server:2022-latest
-    #     env:
-    #       SA_PASSWORD: "Password@123"
-    #       ACCEPT_EULA: "Y"
-    #     ports:
-    #       - 1433:1433
-    #     options: >-
-    #       --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password@123' -Q 'SELECT 1' -C"
-    #       --health-interval=10s
-    #       --health-timeout=5s
-    #       --health-retries=10
+      #   sqlserver:
+      #     image: mcr.microsoft.com/mssql/server:2022-latest
+      #     env:
+      #       SA_PASSWORD: "Password@123"
+      #       ACCEPT_EULA: "Y"
+      #     ports:
+      #       - 1433:1433
+      #     options: >-
+      #       --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Password@123' -Q 'SELECT 1' -C"
+      #       --health-interval=10s
+      #       --health-timeout=5s
+      #       --health-retries=10
 
-    # env:
-    #   ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDock;User Id=sa;Password=Password@123;TrustServerCertificate=True"
+      # env:
+      #   ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDock;User Id=sa;Password=Password@123;TrustServerCertificate=True"
 
-
-    # Docker-in-Docker for building images and running Testcontainers
+      # Docker-in-Docker for building images and running Testcontainers
       docker:
         image: docker:24.0.6-dind
         options: --privileged
-        # ports:
-        #   - 2375:2375
-        # env:
-        #   DOCKER_TLS_CERTDIR: ""
-
-    # env:
-    #   TESTCONTAINERS_RYUK_DISABLED: true
-    #   TESTCONTAINERS_HOST_OVERRIDE: "localhost"
-    #   DOCKER_HOST: tcp://localhost:2375
 
     steps:
+      # -------- CHECKOUT ----------
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -51,13 +42,13 @@ jobs:
       # ---------------------------
       # Backend (.NET)
       # ---------------------------
-
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('Backend/**/*.csproj') }}
 
+      # -------- SETUP .NET ----------
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -75,7 +66,7 @@ jobs:
       # - name: Run .NET integration tests with TestContainers
       #   run: dotnet test ./Backend/Backend.sln --configuration Release --verbosity normal
 
-       # Run integration tests separately with proper Docker setup
+      # Run integration tests separately with proper Docker setup
       - name: Run integration tests
         env:
           DOCKER_HOST: tcp://localhost:2375
@@ -87,7 +78,7 @@ jobs:
           dotnet build ./Backend/IntegrationTests/IntegrationTests.csproj --configuration Release --no-restore
           dotnet test ./Backend/IntegrationTests/IntegrationTests.csproj --configuration Release --no-build --verbosity normal
         continue-on-error: false
-        
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
@@ -103,7 +94,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          
 
       - name: Cache npm
         uses: actions/cache@v4
@@ -131,4 +121,33 @@ jobs:
       # ---------------------------
 
       - name: Build Docker images
-        run: docker compose build
+        run:
+          docker compose build
+
+      # ---------------------------
+      # Database Migrations
+      # ---------------------------
+
+      - name: Run Database Migrations
+        run: |
+          # Start only the database
+          docker compose up -d db
+
+          # Wait for database to be ready (health check)
+          echo "Waiting for database to be healthy..."
+          timeout 120s bash -c 'until docker compose ps db | grep -q "(healthy)"; do echo "Waiting for database..."; sleep 10; done'
+
+          # Run migrations
+          echo "Running database migrations..."
+          docker compose --profile ci-cd run --rm migrate
+
+          # Verify migrations were applied
+          echo "Migrations completed successfully!"
+
+      # ---------------------------
+      # Cleanup
+      # ---------------------------
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down

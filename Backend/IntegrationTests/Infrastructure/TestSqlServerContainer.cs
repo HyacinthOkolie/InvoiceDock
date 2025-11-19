@@ -16,6 +16,8 @@ public class TestSqlServerContainer : IAsyncLifetime
             .WithPassword("Password@123")
             .WithEnvironment("ACCEPT_EULA", "Y")
             .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(1433))
+            .WithAutoRemove(true)
+            .WithCleanUp(true)
             .Build();
     }
 

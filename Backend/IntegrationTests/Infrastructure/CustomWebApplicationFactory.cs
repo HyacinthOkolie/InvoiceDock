@@ -30,9 +30,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
 
             // Add SQL Server (Testcontainer)
-            services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(_connectionString)
-            );
+            services.AddDbContext<AppDbContext>(options => options.UseSqlServer(_connectionString));
         });
     }
 }
