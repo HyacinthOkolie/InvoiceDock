@@ -134,8 +134,8 @@ jobs:
           docker compose up -d db
 
           # Wait for database to be ready (health check)
-          echo "Waiting for database to be healthy..."
-          timeout 120s bash -c 'until docker compose ps db | grep -q "(healthy)"; do echo "Waiting for database..."; sleep 10; done'
+          echo "Waiting for database to start..."
+          sleep 60
 
           # Run migrations
           echo "Running database migrations..."
