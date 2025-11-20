@@ -14,31 +14,23 @@ services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sql_invoicedb
+    platform: linux/amd64
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Password@123"
-      platform: linux/amd64
     ports:
       - "1434:1433"
 
-   #Health check to ensure DB is ready before API starts
-    # healthcheck:
-    #   test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "Password@123", "-Q", "SELECT 1"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 10
-    #   start_period: 60s
-
-  migrate:
-    profiles: ["ci-cd"]  # Add this line
-    image: invoicedock-api:latest
-    depends_on:
-      - db
-    environment:
-      ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True"
-    entrypoint: ["dotnet", "API.dll", "--migrate"]
-    restart: "no"
+  # migrate:
+  #   profiles: ["ci-cd"]  # Add this line
+  #   image: invoicedock-api:latest
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: "Development"
+  #     ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True"
+  #   entrypoint: ["dotnet", "API.dll", "--migrate"]
+  #   restart: "no"
 
   client:
     # image: invoicedock-frontend:latest 

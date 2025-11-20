@@ -124,30 +124,80 @@ jobs:
         run:
           docker compose build
 
-      # ---------------------------
-      # Database Migrations
-      # ---------------------------
+  run-migrations:
+    runs-on: ubuntu-latest
 
-      - name: Run Database Migrations
+    steps:
+      # -------------------------
+      # Checkout code
+      # -------------------------
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # Install .NET 9
+      # -------------------------
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+
+      # -------------------------
+      # Try checking DB directly
+      # -------------------------
+      - name: Try DB connection
+        id: checkdb
         run: |
-          # Start only the database
-          docker compose up -d db
+          echo "Checking if DB is reachable..."
+          /opt/mssql-tools18/bin/sqlcmd -C \
+            -S localhost,1434 \
+            -U sa \
+            -P Password@123 \
+            -Q "SELECT 1" && echo "db_ok=true" >> $GITHUB_OUTPUT || echo "db_ok=false" >> $GITHUB_OUTPUT
 
-          # Wait for database to be ready (health check)
-          echo "Waiting for database to start..."
-          sleep 60
 
-          # Run migrations
-          echo "Running database migrations..."
-          docker compose --profile ci-cd run --rm migrate
+      # -------------------------
+      # Start docker-compose if DB is NOT reachable
+      # -------------------------
+      - name: Start docker-compose (if needed)
+        if: steps.checkdb.outputs.db_ok == 'false'
+        run: |
+          echo "Database not reachable. Starting docker-compose..."
+          docker compose -f docker-compose.yml up -d db
 
-          # Verify migrations were applied
-          echo "Migrations completed successfully!"
 
-      # ---------------------------
-      # Cleanup
-      # ---------------------------
+      # -------------------------
+      # Wait for Docker SQL Server (if needed)
+      # -------------------------
+      - name: Wait for SQL Server (if needed)
+        if: steps.checkdb.outputs.db_ok == 'false'
+        run: |
+          echo "Waiting for database to become ready..."
+          for i in {1..30}; do
+            /opt/mssql-tools18/bin/sqlcmd -C \
+              -S localhost,1433 \
+              -U sa \
+              -P "Password@123" \
+              -Q "SELECT 1" && break
+            echo "Still waiting..."
+            sleep 5
+          done
 
-      - name: Cleanup
-        if: always()
-        run: docker compose down
+
+      # -------------------------
+      # Install EF Core CLI
+      # -------------------------
+      - name: Install EF Core Tools
+        run: dotnet tool install --global dotnet-ef
+
+
+      # -------------------------
+      # Apply EF Core migrations
+      # -------------------------
+      - name: Run EF Migrations
+        run: |
+          echo "Applying EF Core migrations..."
+          dotnet ef database update \
+            --project Backend/API/API.csproj \
+            --startup-project Backend/API/API.csproj
