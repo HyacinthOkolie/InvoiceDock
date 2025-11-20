@@ -37,7 +37,7 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=localhost,1434;Database=InvoiceDB;User Id=sa;Password=Password@123;TrustServerCertificate=True"
     entrypoint: ["dotnet", "API.dll", "--migrate"]
     restart: "no"
 
